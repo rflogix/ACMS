@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="acms.user.UserMapper">
+	
+	<!-- 조회 -->
+	<select id="select" parameterType="HashMap" resultMap="SELECT_RESULT">
+		SELECT
+			*
+			,GETDATE() as SYSTEM_DT
+		<include refid = "FROM"/>
+		<include refid = "WHERE"/>
+		<include refid = "ORDER_BY"/>
+		
+		<if test='(searchParam != null) and (searchParam.pagingYn != null) and (searchParam.pagingYn == "Y")'>
+		OFFSET #{searchParam.offsetRownum} ROWS
+		FETCH NEXT #{searchParam.showCount} ROWS ONLY
+		</if>
+	</select>
+	<sql id="FROM">
+		FROM
+			SYS_USER
+	</sql>
+	<sql id="WHERE">
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test='userSeq != null and userSeq != 0'>
+			AND USER_SEQ = #{userSeq}
+			</if>
+			
+			<if test='userId != null and userId != ""'>
+			AND USER_ID = #{userId}
+			</if>
+			<if test='userId_like != null and userId_like != ""'>
+			AND USER_ID LIKE CONCAT('%', #{userId_like}, '%')
+			</if>
+			
+			<if test='userNm != null and userNm != ""'>
+			AND USER_NM = #{userNm}
+			</if>
+			<if test='userNm_like != null and userNm_like != ""'>
+			AND USER_NM LIKE CONCAT('%', #{userNm_like}, '%')
+			</if>
+		</trim>
+	</sql>
+	<sql id="ORDER_BY">
+		ORDER BY
+		<if test='(searchParam == null) or (searchParam.sortCol == null) or (searchParam.sortCol == "")'>
+			INSERT_DT DESC
+		</if>
+		<if test='(searchParam != null) and (searchParam.sortCol != null) and (searchParam.sortCol != "")'>
+			<choose>
+				<when test='searchParam.sortCol eq "userId"'>USER_ID</when>
+				<when test='searchParam.sortCol eq "userNm"'>USER_NM</when>
+				<otherwise>INSERT_DT</otherwise>
+			</choose>
+			<choose>
+				<when test='searchParam.sortType eq "desc"'>DESC</when>
+				<when test='searchParam.sortType eq "DESC"'>DESC</when>
+				<otherwise>ASC</otherwise>
+			</choose>
+		</if>
+	</sql>
+	<select id="totalCount" parameterType="HashMap" resultType="int">
+		SELECT
+			COUNT(*)
+		<include refid = "FROM"/>
+		<include refid = "WHERE"/>
+	</select>
+	<resultMap id="SELECT_RESULT" type="UserDTO">
+		<result property="userSeq" column="USER_SEQ"/>
+		
+		<association property="loginHistory" column="USER_SEQ" select="selectUserLogin"/>
+		<association property="userPassword" column="USER_SEQ" select="selectUserPassword"/>
+	</resultMap>
+	<select id="selectUserLogin" parameterType="long" resultType="UserLoginDTO">
+		SELECT
+			*
+		FROM
+			SYS_USER_LOGIN
+		WHERE
+			USER_SEQ = #{userSeq}
+			AND SNO = (
+				SELECT MAX(SNO) as SNO
+				FROM SYS_USER_LOGIN
+				WHERE USER_SEQ = #{userSeq}
+			)
+	</select>
+	<select id="selectUserPassword" parameterType="long" resultType="UserPasswordDTO">
+		SELECT
+			*
+		FROM
+			SYS_USER_PASSWORD
+		WHERE
+			USER_SEQ = #{userSeq}
+			AND SNO = (
+				SELECT MAX(SNO) as SNO
+				FROM SYS_USER_PASSWORD
+				WHERE USER_SEQ = #{userSeq}
+			)
+	</select>
+	
+	<!-- 추가 -->
+	<insert id="insert" parameterType="UserDTO" useGeneratedKeys="true" keyProperty="userSeq">
+		INSERT INTO SYS_USER (
+			USER_ID
+			,USER_NM
+			,SALT
+			,MENU_TYPE
+			,INSERT_DT
+			,INSERT_USER_SEQ
+			,DELETE_YN
+		) VALUES (
+			#{userId}
+			,#{userNm}
+			,#{salt}
+			,#{menuType}
+			,GETDATE()
+			,#{insertUserSeq}
+			,#{deleteYn}
+		);
+	</insert>
+	
+	<!-- 수정 -->
+	<update id="update" parameterType="UserDTO">
+		UPDATE SYS_USER
+		<trim prefix="SET" prefixOverrides=",">
+			<if test='userId != null and userId != ""'>
+			,USER_ID = #{userId}
+			</if>
+			
+			<if test='userNm != null and userNm != ""'>
+			,USER_NM = #{userNm}
+			</if>
+			
+			<if test='salt != null and salt != ""'>
+			,SALT = #{salt}
+			</if>
+			
+			<if test='menuType != null and menuType != 0'>
+			,MENU_TYPE = #{menuType}
+			</if>
+			
+			<if test='updateUserSeq != null and updateUserSeq != 0'>
+			,UPDATE_USER_SEQ = #{updateUserSeq}
+			</if>
+			,UPDATE_DT = GETDATE()
+			
+			<if test='deleteYn != null and deleteYn == 1'>
+				,DELETE_YN = #{deleteYn}
+				,DELETE_DT = GETDATE()
+				<if test='updateUserSeq != null and updateUserSeq != 0'>
+				,DELETE_USER_SEQ = #{updateUserSeq}
+				</if>
+			</if>
+			<if test='deleteYn != null and deleteYn == -1'>
+				,DELETE_YN = #{deleteYn}
+				,DELETE_DT = NULL
+				,DELETE_USER_SEQ = NULL
+			</if>
+		</trim>
+		WHERE
+			USER_SEQ = #{userSeq};
+	</update>
+	
+	<!-- 삭제 -->
+	<update id="delete" parameterType="UserDTO">
+		UPDATE SYS_USER
+		<trim prefix="SET" prefixOverrides=",">
+			,DELETE_YN = #{deleteYn}
+			,DELETE_DT = GETDATE()
+			<if test='deleteUserSeq != null and deleteUserSeq != 0'>
+			,DELETE_USER_SEQ = #{deleteUserSeq}
+			</if>
+		</trim>
+		WHERE
+			USER_SEQ = #{userSeq};
+	</update>
+	
+	<!-- 비밀번호 조회 -->
+	<select id="selectPassword" parameterType="UserPasswordDTO" resultType="UserPasswordDTO">
+		SELECT
+			*
+		FROM
+			SYS_USER_PASSWORD
+		WHERE
+			USER_SEQ = #{userSeq}
+			<if test='password != null and password != ""'>
+			AND PASSWORD = #{password}
+			</if>
+	</select>
+	<select id="lastPassword" parameterType="UserPasswordDTO" resultType="UserPasswordDTO">
+		SELECT
+			*
+		FROM
+			SYS_USER_PASSWORD
+		WHERE
+			USER_SEQ = #{userSeq}
+			AND SNO = (
+				SELECT MAX(SNO) as SNO
+				FROM SYS_USER_PASSWORD
+				WHERE USER_SEQ = #{userSeq}
+			)
+	</select>
+	
+	<!-- 비밀번호 추가 -->
+	<select id="insertPassword" parameterType="UserPasswordDTO" resultType="int">
+		BEGIN
+			INSERT INTO SYS_USER_PASSWORD (
+				USER_SEQ
+				,SNO
+				,PASSWORD
+				,EXPIRE_DT
+				,ERROR_COUNT
+				,INSERT_DT
+				,INSERT_USER_SEQ
+			) VALUES (
+				#{userSeq}
+				,(
+					SELECT ISNULL(MAX(SNO), 0) + 1
+					FROM SYS_USER_PASSWORD
+					WHERE USER_SEQ = #{userSeq}
+				)
+				,#{password}
+				,DATEADD(YEAR, 1, GETDATE())
+				,0
+				,GETDATE()
+				,#{insertUserSeq}
+			);
+			
+			SELECT @@ROWCOUNT;
+		END;
+	</select>
+	
+	<!-- 비밀번호 수정 -->
+	<select id="updatePassword" parameterType="UserPasswordDTO" resultType="int">
+		BEGIN
+			UPDATE SYS_USER_PASSWORD
+			<trim prefix="SET" prefixOverrides=",">
+				<if test='password != null and password != ""'>
+				,PASSWORD = #{password}
+				</if>
+				
+				<if test='expireDt != null and expireDt == "AUTO"'>
+				,EXPIRE_DT = TO_CHAR(GETDATE() + INTERVAL '1' YEAR, 'YYYY-MM-DD HH24:MI:SS')
+				</if>
+				<if test='expireDt != null and expireDt != "AUTO"'>
+				,EXPIRE_DT = #{expireDt}
+				</if>
+				
+				<if test='errorCount != null and errorCount > -1'>
+				,ERROR_COUNT = #{errorCount}
+				</if>
+				
+				<if test='updateUserSeq != null and updateUserSeq != 0'>
+				,UPDATE_USER_SEQ = #{updateUserSeq}
+				</if>
+				<if test='updateDt != null and updateDt == "AUTO"'>
+				,UPDATE_DT = GETDATE()
+				</if>
+			</trim>
+			WHERE
+				USER_SEQ = #{userSeq}
+				AND SNO = #{sno};
+			
+			SELECT @@ROWCOUNT;
+		END;
+	</select>
+	
+	<!-- 로그인 -->
+	<select id="login" parameterType="UserLoginDTO" resultType="int">
+		BEGIN
+			INSERT INTO SYS_USER_LOGIN (
+				USER_SEQ
+				,SNO
+				,IP_ADDRESS
+				,BROWSER_INFO
+				,LOGIN_DT
+			) VALUES (
+				#{userSeq}
+				,(
+					SELECT ISNULL(MAX(SNO), 0) + 1
+					FROM SYS_USER_LOGIN
+					WHERE USER_SEQ = #{userSeq}
+				)
+				,#{ipAddress}
+				,#{browserInfo}
+				,GETDATE()
+			);
+			
+			SELECT @@ROWCOUNT;
+		END;
+	</select>
+	
+	<!-- 로그아웃 -->
+	<select id="logout" parameterType="UserLoginDTO" resultType="int">
+		BEGIN
+			UPDATE SYS_USER_LOGIN
+			SET
+				LOGOUT_DT = GETDATE()
+			WHERE
+				USER_SEQ = #{userSeq}
+				AND SNO = #{sno};
+			
+			SELECT @@ROWCOUNT;
+		END;
+	</select>
+	
+	<!-- 히스토리 추가 -->
+	<select id="insertHistory" parameterType="UserDTO" resultType="int">
+		BEGIN
+			<include refid = "insertHistory_SQL"/>
+			
+			SELECT @@ROWCOUNT;
+		END;
+	</select>
+	<sql id = "insertHistory_SQL">
+		INSERT INTO SYS_USER_HISTORY (
+			<include refid = "ALL_FILED"/>
+			, SNO
+		)
+		SELECT
+			<include refid = "ALL_FILED"/>
+			,(
+				SELECT ISNULL(MAX(SNO), 0) + 1
+				FROM SYS_USER_HISTORY
+				WHERE USER_SEQ = #{userSeq}
+			)
+		FROM
+			SYS_USER
+		WHERE
+			USER_SEQ = #{userSeq};
+	</sql>
+	<sql id = "ALL_FILED">
+		USER_SEQ
+		,USER_ID
+		,USER_NM
+		,SALT
+		,INSERT_DT
+		,INSERT_USER_SEQ
+		,UPDATE_DT
+		,UPDATE_USER_SEQ
+		,DELETE_DT
+		,DELETE_USER_SEQ
+		,DELETE_YN
+	</sql>
+	
+</mapper>

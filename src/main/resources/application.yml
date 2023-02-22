@@ -1,0 +1,184 @@
+#################################################################################
+# Active 프로필 그룹 설정
+#################################################################################
+
+spring:
+  profiles:
+    active: local-acms # 그룹 선택 (local/dev/prod)
+    group: # 그룹 세팅
+      local-acms: common, local-server, acms
+      local-test: common, local-server, test
+      dev-acms: common, dev-server, acms
+      dev-test: common, dev-server, test
+      prod-acms: common, prod-server, acms
+      prod-test: common, prod-server, test
+
+
+
+
+#################################################################################
+# 공통 프로필 (common)
+#################################################################################
+---
+spring:
+  config:
+    activate:
+      on-profile: common # 프로필 설정
+      
+  datasource: # DB 관련 설정
+    hikari: # dbcp 상위 버젼
+      connection-timeout: 30000   # 커넥션 타임 아웃 (30s)
+      idle-timeout: 600000   # pool 미사용 커넥션 유지 시간 (10m)
+      max-lifetime: 1800000  # pool 에서 미사용 커넥션 최대 수명 시간 (30m)
+      minimum-idle: 1        # 최소 커넥션 유지 개수 (default: same as maximumPoolSize)
+      maximum-pool-size: 10  # pool에 유지시킬 수 있는 최대 커넥션 수
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+      
+  mvc: # JSP 설정
+    view:
+      prefix: /WEB-INF/jsp/
+      suffix: .jsp
+    pathmatch.matching-strategy: ant-path-matcher
+  
+  devtools: # 서버 재시작 없이 바로 적용하기
+    livereload:
+      enabled: false
+  
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
+server:
+  port: 80
+  error:
+    path: /common/page_error # 필수 설정!! ErrorConfig.java 에서 사용
+
+logging: # 로그 설정
+  level:
+    root: warn # 기본 레벨
+    org: # mybatis 로그 레벨
+      mybatis: error
+    jdbc: # SQL 로그 레벨
+      audit: off
+      sqlonly: off
+      sqltiming: error
+  
+  pattern: # 로그 내용 패턴 설정
+    file: "[%d{yyyy-MM-dd HH:mm:ss.SSS}] %p [%c{} %M{}(\\) line:%L{}] : %m%n"
+    console: "[%d{yyyy-MM-dd HH:mm:ss.SSS}] %cyan(DJF)-%clr(%p) %c{} %cyan(%M{}(\\)) line:%L{} : %m%n"
+    
+  file: # 로그 파일 저장 설정
+    name: logs/logback.log
+    max-history: 30
+    
+  logback: # 일별 로그 파일 분기 설정
+    rollingpolicy:
+      file-name-pattern: logs/logback.%d{yyyy-MM-dd}.%i.log.zip
+      max-history: 30
+
+
+
+
+#################################################################################
+# 로컬(개발자) 프로필 (local-server)
+#################################################################################
+---
+spring:
+  config:
+    activate:
+      on-profile: local-server # 프로필 설정
+  
+  devtools: # 서버 재시작 없이 바로 적용하기 - 반드시 Project > Build Automatically 실행되어있어야한다
+    livereload:
+      enabled: true
+  
+  datasource: # DB 관련 설정
+    hikari: # dbcp 상위 버젼
+      driverClassName: net.sf.log4jdbc.sql.jdbcapi.DriverSpy # jdbc 로그를 위한 드라이버
+      jdbcUrl: jdbc:log4jdbc:sqlserver://14.36.52.204:1433;databaseName=ACMS
+      username: SA
+      password: HKcmc0500
+
+logging:
+  level:
+    jdbc: # SQL 로그 레벨
+      sqltiming: debug
+    common: debug
+    acms: debug # 패키지별 로그 레벨
+    test: debug # 패키지별 로그 레벨
+
+
+
+
+#################################################################################
+# 개발 서버 프로필 (dev-server)
+#################################################################################
+---
+spring:
+  config:
+    activate:
+      on-profile: dev-server # 프로필 설정
+  
+  datasource: # DB 관련 설정
+    hikari: # dbcp 상위 버젼
+      driverClassName: net.sf.log4jdbc.sql.jdbcapi.DriverSpy # jdbc 로그를 위한 드라이버
+      jdbcUrl: jdbc:log4jdbc:sqlserver://14.36.52.204:1433;databaseName=ACMS
+      username: SA
+      password: HKcmc0500
+
+
+
+
+#################################################################################
+# 운영 서버 프로필 (prod-server)
+#################################################################################
+---
+spring:
+  config:
+    activate:
+      on-profile: prod-server # 프로필 설정
+  
+  datasource: # DB 관련 설정
+    hikari: # dbcp 상위 버젼
+      driverClassName: net.sf.log4jdbc.sql.jdbcapi.DriverSpy # jdbc 로그를 위한 드라이버
+      jdbcUrl: jdbc:log4jdbc:sqlserver://14.36.52.204:1433;databaseName=ACMS
+      username: SA
+      password: HKcmc0500
+
+
+
+
+#################################################################################
+# 프로젝트별 프로필 acms
+#################################################################################
+---
+spring:
+  config:
+    activate:
+      on-profile: acms # 프로필 설정
+    name: acms.rflogix.com # 도메인 - RequestConfig.java 에서 사용하므로 필수지정
+    
+  mvc: # JSP 설정
+    view:
+      prefix: /WEB-INF/jsp/acms/
+
+
+
+
+#################################################################################
+# 프로젝트별 프로필 test
+#################################################################################
+---
+spring:
+  config:
+    activate:
+      on-profile: test # 프로필 설정
+    name: test.rflogix.com # 도메인 - RequestConfig.java 에서 사용하므로 필수지정
+  
+  mvc: # JSP 설정
+    view:
+      prefix: /WEB-INF/jsp/test/

@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="acms.menu.MenuMapper">
+	
+	<!-- 조회 -->
+	<select id="select" parameterType="HashMap" resultMap="SELECT_RESULT">
+		SELECT
+			*
+			,GETDATE() as SYSTEM_DT
+		<include refid = "FROM"/>
+		<include refid = "WHERE"/>
+		<include refid = "ORDER_BY"/>
+		
+		<if test='(searchParam != null) and (searchParam.pagingYn != null) and (searchParam.pagingYn == "Y")'>
+		OFFSET #{searchParam.offsetRownum} ROWS
+		FETCH NEXT #{searchParam.showCount} ROWS ONLY
+		</if>
+	</select>
+	<sql id="FROM">
+		FROM
+			SYS_MENU
+	</sql>
+	<sql id="WHERE">
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test='menuSeq != null and menuSeq != 0'>
+			AND MENU_SEQ = #{menuSeq}
+			</if>
+			
+			<if test='menuNm != null and menuNm != ""'>
+			AND MENU_NM = #{menuNm}
+			</if>
+			<if test='menuNm_like != null and menuNm_like != ""'>
+			AND MENU_NM LIKE CONCAT('%', #{menuNm_like}, '%')
+			</if>
+			
+			<if test='menuUrl != null and menuUrl != ""'>
+			AND MENU_URL = #{menuUrl}
+			</if>
+			<if test='menuUrl_like != null and menuUrl_like != ""'>
+			AND MENU_URL LIKE CONCAT('%', #{menuUrl_like}, '%')
+			</if>
+			
+			<if test='menuLevel != null and menuLevel != 0'>
+			AND MENU_LEVEL = #{menuLevel}
+			</if>
+			
+			<if test='userYn != null and userYn != 0'>
+			AND USE_YN = #{userYn}
+			</if>
+			
+			<if test='deleteYn != null and deleteYn != 0'>
+			AND DELETE_YN = #{deleteYn}
+			</if>
+			
+			<if test='userSeq != null and userSeq != 0'>
+			<!-- TODO: 사용자별 메뉴 권한 체크 -->
+			</if>
+		</trim>
+	</sql>
+	<sql id="ORDER_BY">
+		ORDER BY
+		<if test='(searchParam == null) or (searchParam.sortCol == null) or (searchParam.sortCol == "")'>
+			MENU_LEVEL ASC, MENU_ORDER ASC
+		</if>
+		<if test='(searchParam != null) and (searchParam.sortCol != null) and (searchParam.sortCol != "")'>
+			<choose>
+				<when test='searchParam.sortCol eq "menuNm"'>MENU_NM</when>
+				<otherwise>INSERT_DT</otherwise>
+			</choose>
+			<choose>
+				<when test='searchParam.sortType eq "desc"'>DESC</when>
+				<when test='searchParam.sortType eq "DESC"'>DESC</when>
+				<otherwise>ASC</otherwise>
+			</choose>
+		</if>
+	</sql>
+	<select id="totalCount" parameterType="HashMap" resultType="int">
+		SELECT
+			COUNT(*)
+		<include refid = "FROM"/>
+		<include refid = "WHERE"/>
+	</select>
+	<resultMap id="SELECT_RESULT" type="MenuDTO">
+		<result property="parentSeq" column="PARENT_SEQ"/>
+		
+		<association property="parentMenu" column="PARENT_SEQ" select="selectParentMenu"/>
+	</resultMap>
+	<select id="selectParentMenu" parameterType="long" resultType="MenuDTO">
+		SELECT
+			*
+		FROM
+			SYS_MENU
+		WHERE
+			MENU_SEQ = #{parentSeq}
+	</select>
+	
+	<!-- 추가 -->
+	<insert id="insert" parameterType="MenuDTO" useGeneratedKeys="true" keyProperty="menuSeq">
+		INSERT INTO SYS_MENU (
+			PARENT_SEQ
+			,MENU_NM
+			,MENU_URL
+			,MENU_LEVEL
+			,MENU_ORDER
+			,USE_YN
+			,INSERT_DT
+			,INSERT_USER_SEQ
+			,DELETE_YN
+		) VALUES (
+			<if test='parentSeq == null or parentSeq == 0'>
+			NULL
+			</if>
+			<if test='parentSeq != null and parentSeq != 0'>
+			#{parentSeq}
+			</if>
+			,#{menuNm}
+			,#{menuUrl}
+			,#{menuLevel}
+			,#{menuOrder}
+			,#{useYn}
+			,GETDATE()
+			,#{insertUserSeq}
+			,#{deleteYn}
+		);
+	</insert>
+	
+	<!-- 수정 -->
+	<update id="update" parameterType="MenuDTO">
+		UPDATE SYS_MENU
+		<trim prefix="SET" prefixOverrides=",">
+			<if test='parentSeq == null or parentSeq == 0'>
+			,PARENT_SEQ = NULL
+			</if>
+			<if test='parentSeq != null and parentSeq != 0'>
+			,PARENT_SEQ = #{parentSeq}
+			</if>
+			
+			<if test='menuNm != null and menuNm != ""'>
+			,MENU_NM = #{menuNm}
+			</if>
+			
+			<if test='menuUrl != null and menuUrl != ""'>
+			,MENU_URL = #{menuUrl}
+			</if>
+			
+			<if test='menuLevel != null and menuLevel != 0'>
+			,MENU_LEVEL = #{menuLevel}
+			</if>
+			
+			<if test='menuOrder != null and menuOrder != 0'>
+			,MENU_ORDER = #{menuOrder}
+			</if>
+			
+			<if test='useYn != null and useYn != 0'>
+			,USE_YN = #{useYn}
+			</if>
+			
+			<if test='updateUserSeq != null and updateUserSeq != 0'>
+			,UPDATE_USER_SEQ = #{updateUserSeq}
+			</if>
+			,UPDATE_DT = GETDATE()
+			
+			<if test='deleteYn != null and deleteYn == 1'>
+				,DELETE_YN = #{deleteYn}
+				,DELETE_DT = GETDATE()
+				<if test='updateUserSeq != null and updateUserSeq != 0'>
+				,DELETE_USER_SEQ = #{updateUserSeq}
+				</if>
+			</if>
+			<if test='deleteYn != null and deleteYn == -1'>
+				,DELETE_YN = #{deleteYn}
+				,DELETE_DT = NULL
+				,DELETE_USER_SEQ = NULL
+			</if>
+		</trim>
+		WHERE
+			MENU_SEQ = #{menuSeq};
+	</update>
+	
+	<!-- 삭제 -->
+	<delete id="delete" parameterType="MenuDTO">
+		UPDATE SYS_MENU
+		<trim prefix="SET" prefixOverrides=",">
+			,DELETE_YN = #{deleteYn}
+			,DELETE_DT = GETDATE()
+			<if test='deleteUserSeq != null and deleteUserSeq != 0'>
+			,DELETE_USER_SEQ = #{deleteUserSeq}
+			</if>
+		</trim>
+		WHERE MENU_SEQ = #{menuSeq};
+	</delete>
+</mapper>

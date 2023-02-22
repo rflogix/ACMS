@@ -1,0 +1,19 @@
+/****************************************************************************************
+* 맑은고딕 폰트
+*****************************************************************************************/
+
+@font-face {
+	font-family: '맑은고딕';
+	font-weight: normal;
+	src: url(MalgunGothic/MalgunGothic.woff2) format('woff2')
+		,url(MalgunGothic/MalgunGothic.woff) format('woff')
+		,url(MalgunGothic/MalgunGothic.eot?#iefix) format('embedded-opentype');
+}
+
+@font-face {
+	font-family: '맑은고딕';
+	font-weight: bold;
+	src: /*ur l(MalgunGothic/MalgunGothic-b old.woff2) format('woff2')
+		,*/url(MalgunGothic/MalgunGothic-bold.woff) format('woff')
+		,url(MalgunGothic/MalgunGothic-bold.eot?#iefix) format('embedded-opentype');
+}

@@ -1,0 +1,127 @@
+.login_wrap {
+	width: auto;
+	height: 780px;
+	background: #FFFFFF;
+	box-shadow: 2px 6px 25px rgba(0, 0, 0, 0.15);
+}
+
+.login_wrap .left_wrap {
+	width: 690px;
+	height: 100%;
+}
+
+.login_wrap .right_wrap {
+	width: calc(690px - 135px - 135px);
+	height: calc(100% - 114px);
+	margin: 114px 135px 0 135px;
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 500;
+	font-size: 16px;
+}
+
+/* 로고 */
+.login_wrap .right_wrap .logo_wrap label {
+	line-height: 19px;
+	color: #2A2A2A;
+}
+
+/* 로고 안내문구 */
+.login_wrap .right_wrap .login_label {
+	margin-top: 25px;
+	line-height: 19px;
+	color: #007DA4;
+}
+
+/* 폼 */
+.login_wrap .right_wrap form {
+	margin-top: 30px;
+}
+.login_wrap .right_wrap form > div {
+	width: 100%;
+}
+/* 폼 라벨 */
+.login_wrap .right_wrap form label {
+	font-weight: 600;
+	font-size: 18px;
+	line-height: 21px;
+	
+	color: #007DA4;
+}
+
+.login_wrap .right_wrap form input {
+	width: calc(100% - 2px - 30px);
+	height: calc(64px - 2px);
+	line-height: 64px;
+	padding: 0 15px;
+	margin-top: 5px;
+	border: 1px solid #D9D9D9;
+	border-radius: 5px;
+	
+	font-weight: 400;
+	color: #757575;
+}
+
+/* 폼 비번 */
+.login_wrap .right_wrap form .user_pw {
+	margin-top: 26px;
+}
+
+/* 아이디 기억 */
+.login_wrap .right_wrap .remember_wrap {
+	margin-top: 45px;
+}
+.login_wrap .right_wrap .remember_wrap input {
+	width: 20px;
+	height: 20px;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	background: #FFFFFF;
+	border: 1px solid #D9D9D9;
+	border-radius: 3px;
+	
+	cursor: pointer;
+}
+.login_wrap .right_wrap .remember_wrap input::after {
+	border: solid #fff;
+	border-width: 0 2px 2px 0;
+	content: '';
+	display: none;
+	height: 40%;
+	left: 40%;
+	position: relative;
+	top: 20%;
+	transform: rotate(45deg);
+	width: 15%;
+}
+.login_wrap .right_wrap .remember_wrap input:checked {
+  background: #007DA4;
+}
+.login_wrap .right_wrap .remember_wrap input:checked::after {
+  display: block;
+}
+
+
+.login_wrap .right_wrap .remember_wrap label {
+	padding-left: 10px;
+	line-height: 19px;
+	
+	font-weight: 400;
+	color: #757575;
+	cursor: pointer;
+}
+
+/* 로그인 버튼 */
+.login_wrap .right_wrap .btn_login {
+	width: 420px;
+	height: 64px;
+	background: linear-gradient(90deg, #18B0D5 0%, #1C8FAB 100%);
+	border-radius: 5px;
+	margin-top: 45px;
+	
+	font-size: 20px;
+	line-height: 23px;
+	color: #FFFFFF;
+	cursor: pointer;
+}

@@ -1,0 +1,61 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '2.7.8'
+	id 'io.spring.dependency-management' version '1.1.0'
+	id 'war'
+}
+
+bootWar {
+	archiveBaseName = 'ACMS'
+	archiveFileName = 'acms.war'
+}
+
+group = 'com.hkcmc'
+version = '1.0.1'
+sourceCompatibility = '11'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// spring boot
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+	implementation 'org.springframework.boot:spring-boot-devtools'
+	
+	// jsp
+	implementation 'org.apache.tomcat.embed:tomcat-embed-jasper:9.0.71' 
+	implementation 'javax.servlet:jstl:1.2' 
+	
+	// lombok
+	implementation 'org.projectlombok:lombok:1.18.26'
+	annotationProcessor 'org.projectlombok:lombok:1.18.26'
+	
+	// mybatis
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.0'
+	
+	// log4jdbc
+	implementation 'org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4:1.16'
+	
+	// ms-sql
+	implementation 'com.microsoft.sqlserver:mssql-jdbc:9.4.1.jre8'
+	
+	// string
+	implementation 'org.apache.commons:commons-lang3:3.0'
+	
+	// @MappedSuperclass
+	implementation 'javax.persistence:javax.persistence-api:2.2'
+	
+	// excel
+	implementation 'org.apache.poi:poi-ooxml:5.2.3'
+	
+	// fileupload
+	implementation 'commons-fileupload:commons-fileupload:1.4'
+}
